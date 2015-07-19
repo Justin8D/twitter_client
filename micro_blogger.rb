@@ -4,15 +4,15 @@ class MicroBlogger
 	attr_accessor :client
 
 	def initialize
-		puts 'initializing MicroBlogger'
+		puts "initializing MicroBlogger\n\n"
 		@client = JumpstartAuth.twitter
 	end
 
 	def run
-		puts "Welcome to the JSl Twitter Client"
+		puts "Welcome to the JSl Twitter Client\n\n"
 		command = ""
 		while command != "q"
-			printf "Enter command: "
+			printf "Enter command. (Type 'h' for a list of commands):  "
 			input = gets.chomp
 			parts = input.split(" ")
 			command = parts[0]
@@ -21,6 +21,23 @@ class MicroBlogger
 				when 't' then tweet(parts[1..-1].join(" "))
 				when 'dm' then dm(parts[1], parts[2..-1].join(" "))
 				when 'spam' then spam_my_followers(parts[1..-1].join" ")
+				when 'elt' then everyones_last_tweet
+				when 's' then shorten(parts[1..-1].join(" "))
+				when 'tu' then tweet(parts[1..-2].join(" ") + " " + shorten(parts[-1]).to_s)
+				when 'h' then puts %q{Command List:
+
+--Message Commands--
+t: Send a tweet. (Syntax: "t <tweet>")
+tu: Send a tweet with a shortened URL. (Syntax: "tu <tweet> <URL>")
+dm: Send a direct message. (Syntax: "dm <user name> <message>")
+spam: Send a direct message to all your followers. (Syntax: "spam <message>")
+
+--Other Commands--
+s: Shorten a URL. (Syntax: "s <URL>")
+elt: See your friends' latest tweets. (Syntax "elt")
+h: Access this menu.
+q: Quit.
+}
 				else puts "Sorry, '#{command}' is not a valid command."
 			end
 		end
@@ -56,6 +73,21 @@ class MicroBlogger
 
   	def spam_my_followers(message)
     	followers_list.each { |follower| dm(follower, message)}
+  	end
+
+  	def everyones_last_tweet
+  		@client.friends.each {|friend| 
+  			timestamp = @client.user(friend).status.created_at
+  			puts "@#{@client.user(friend).screen_name} (#{timestamp.strftime('%A, %b %d')}): #{@client.user(friend).status.text} \n"
+  			}
+  	end
+
+  	def shorten(original_url)
+  		puts "Shortening this URL: #{original_url}"
+		require 'bitly'
+		Bitly.use_api_version_3
+		bitly = Bitly.new('hungryacademy', 'R_430e9f62250186d2612cca76eee2dbc6')
+		return bitly.shorten(original_url).short_url
   	end
 
 end
